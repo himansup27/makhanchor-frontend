@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Bell, Search, User, Settings, LogOut } from 'lucide-react';
+import Logo from "../../Assets/images/makhanchor_logo.png";
 
 const Header = () => {
   const { user, logout } = useAuth();
@@ -28,25 +29,17 @@ const Header = () => {
           {/* Left Section - Logo & Search */}
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-primary-500 to-primary-600 p-2.5 rounded-xl shadow-lg">
-                <svg
-                  className="w-7 h-7 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                  />
-                </svg>
+              <div className="inline-flex items-center justify-center w-[200px] h-16 bg-gradient-to-br rounded-2xl">
+                <img
+                  src={Logo}
+                  alt="Logo"
+                  className="w-[200px] h-16"
+                />
               </div>
-              <div>
+              {/* <div>
                 <h1 className="text-xl font-bold text-gray-900">MakhanChor</h1>
                 <p className="text-xs text-gray-500">Biscuits Dashboard</p>
-              </div>
+              </div> */}
             </div>
 
             {/* Search Bar */}

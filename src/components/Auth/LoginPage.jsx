@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Eye, EyeOff, Lock, Phone, AlertCircle, Loader } from 'lucide-react';
+import Logo from '../../Assets/images/makhanchor_logo.png';
 
 const LoginPage = () => {
   const [mobile, setMobile] = useState('');
@@ -50,21 +51,14 @@ const LoginPage = () => {
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-lg mb-4">
-            <svg
-              className="w-12 h-12 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-              />
-            </svg>
-          </div>
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br rounded-2xl mb-4">
+  <img
+    src={Logo}
+    alt="Logo"
+    className="w-16 h-16"
+  />
+</div>
+
           <h1 className="text-3xl font-bold text-gray-900 mb-2">MakhanChor Biscuits</h1>
           <p className="text-gray-600">Admin Dashboard Login</p>
         </div>
@@ -173,13 +167,13 @@ const LoginPage = () => {
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          {/* <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-xs font-semibold text-blue-900 mb-2">Demo Credentials:</p>
             <div className="text-xs text-blue-800 space-y-1">
               <p>Mobile: <strong>9876543210</strong></p>
               <p>Password: <strong>admin123</strong></p>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Footer */}
