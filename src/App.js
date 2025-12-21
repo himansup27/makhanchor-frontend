@@ -1,24 +1,127 @@
-import logo from './logo.svg';
-import './App.css';
+// src/App.jsx
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
+import LoginPage from './components/Auth/LoginPage';
+import Header from './components/Dashboard/Header';
+import Sidebar from './components/Dashboard/Sidebar';
+import DashboardOverview from './components/Dashboard/DashboardOverview';
+import ProductionPage from './components/Production/ProductionPage';
+import MaidaPage from './components/Inventory/MaidaPage';
+import OilPage from './components/Inventory/OilPage';
+import GheePage from './components/Inventory/GheePage';
+import SalesPage from './components/Sales/SalesPage';
+import ReportsPage from './components/Reports/ReportsPage';
+import SettingsPage from './components/Settings/SettingsPage';
+
+// Dashboard Layout Component
+const DashboardLayout = ({ children }) => {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <main className="flex-1 p-6 overflow-auto">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+};
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* Public Route */}
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <DashboardOverview />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/production"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ProductionPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/maida"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <MaidaPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/oil"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <OilPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/ghee"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <GheePage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/sales"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <SalesPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ReportsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <SettingsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
