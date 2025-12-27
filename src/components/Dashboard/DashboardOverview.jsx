@@ -32,6 +32,7 @@ const DashboardOverview = () => {
   const [inventoryStats, setInventoryStats] = useState(null);
   const [productionData, setProductionData] = useState([]);
   const [salesData, setSalesData] = useState([]);
+  const [chartPeriod, setChartPeriod] = useState('week');
 
   // Load all data on mount
   useEffect(() => {
@@ -76,21 +77,37 @@ const DashboardOverview = () => {
   const todayProduction = productionData.find(p => p.date.split('T')[0] === today);
 
   // Prepare chart data - combine production and sales by date
-  const last7Days = [...Array(7)].map((_, i) => {
+  const daysToShow = chartPeriod === 'week' ? 7 : 30;
+  const chartDays = [...Array(daysToShow)].map((_, i) => {
     const date = new Date();
-    date.setDate(date.getDate() - (6 - i));
+    date.setDate(date.getDate() - (daysToShow - 1 - i));
     return date.toISOString().split('T')[0];
   });
 
-  const chartData = last7Days.map(date => {
-    const prod = productionData.find(p => p.date.split('T')[0] === date);
-    const sale = salesData.find(s => s.date.split('T')[0] === date);
-    
+  const chartData = chartDays.map(date => {
+    // Sum all production entries for this date
+    const productionForDate = productionData
+      .filter(p => p.date.split('T')[0] === date)
+      .reduce((sum, p) => sum + (p.packets || 0), 0);
+  
+    // Sum all sales entries for this date
+    const salesForDate = salesData
+      .filter(s => s.date.split('T')[0] === date)
+      .reduce((sum, s) => sum + (s.packets || 0), 0);
+  
+    // Sum all revenue for this date
+    const revenueForDate = salesData
+      .filter(s => s.date.split('T')[0] === date)
+      .reduce((sum, s) => sum + (s.amount || 0), 0);
+  
     return {
-      date: new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
-      production: prod?.packets || 0,
-      sales: sale?.packets || 0,
-      revenue: sale?.amount || 0,
+      date: new Date(date).toLocaleDateString('en-IN', { 
+        day: '2-digit', 
+        month: 'short' 
+      }),
+      production: productionForDate,
+      sales: salesForDate,
+      revenue: revenueForDate,
     };
   });
 
@@ -259,11 +276,25 @@ const DashboardOverview = () => {
               <p className="text-sm text-gray-600">Last 7 days performance</p>
             </div>
             <div className="flex gap-2">
-              <button className="px-3 py-1.5 text-xs font-medium bg-primary-50 text-primary-600 rounded-lg">
+              <button 
+                onClick={() => setChartPeriod('week')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg ${
+                  chartPeriod === 'week' 
+                    ? 'bg-primary-50 text-primary-600' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
                 Week
               </button>
-              <button className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
-                Month
+                <button 
+                  onClick={() => setChartPeriod('month')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg ${
+                      chartPeriod === 'month' 
+                        ? 'bg-primary-50 text-primary-600' 
+                        : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  Month
               </button>
             </div>
           </div>

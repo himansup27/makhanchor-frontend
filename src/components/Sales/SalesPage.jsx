@@ -78,13 +78,36 @@ const SalesPage = () => {
   const averageSale = salesData.length > 0 ? Math.round(totalRevenue / salesData.length) : 0;
 
   // Chart data (last 7 days)
-  const chartData = salesData
-    .slice(-7)
-    .map(s => ({
-      date: new Date(s.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
-      packets: s.packets,
-      revenue: s.amount / 1000, // in thousands
-    }));
+  // Chart data (last 7 days) - Group by date and sum values
+const chartData = Object.values(
+  salesData.reduce((acc, s) => {
+    const dateKey = new Date(s.date).toISOString().split('T')[0];
+    const displayDate = new Date(s.date).toLocaleDateString('en-IN', { 
+      day: '2-digit', 
+      month: 'short' 
+    });
+    
+    if (!acc[dateKey]) {
+      acc[dateKey] = {
+        date: displayDate,
+        packets: 0,
+        revenue: 0,
+      };
+    }
+    
+    acc[dateKey].packets += s.packets;
+    acc[dateKey].revenue += s.amount / 1000; // in thousands
+    
+    return acc;
+  }, {})
+)
+  .sort((a, b) => {
+    // Sort by date to maintain chronological order
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return dateA - dateB;
+  })
+  .slice(-7); // Take last 7 days
 
   // Filter data
   const filteredData = salesData.filter(item => {

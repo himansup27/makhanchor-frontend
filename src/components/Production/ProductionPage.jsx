@@ -98,28 +98,36 @@ const handleExcelUpload = async (e) => {
       const data = XLSX.utils.sheet_to_json(sheet);
 
       for (const row of data) {
-        // Fix date parsing - Excel stores dates as serial numbers
         let dateValue = row.date;
         
         // Check if date is a number (Excel serial date)
         if (typeof dateValue === 'number') {
           // Convert Excel serial date to JavaScript date
-          const excelEpoch = new Date(1899, 11, 30); // Excel's epoch
-          const excelDate = new Date(excelEpoch.getTime() + dateValue * 86400000);
-          dateValue = excelDate.toISOString().split('T')[0];
+          const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+          const jsDate = new Date(excelEpoch.getTime() + dateValue * 86400000);
+          // Format as YYYY-MM-DD in local timezone
+          const year = jsDate.getUTCFullYear();
+          const month = String(jsDate.getUTCMonth() + 1).padStart(2, '0');
+          const day = String(jsDate.getUTCDate()).padStart(2, '0');
+          dateValue = `${year}-${month}-${day}`;
         } else if (dateValue instanceof Date) {
-          // If it's already a Date object
-          dateValue = dateValue.toISOString().split('T')[0];
+          const year = dateValue.getFullYear();
+          const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+          const day = String(dateValue.getDate()).padStart(2, '0');
+          dateValue = `${year}-${month}-${day}`;
         } else if (typeof dateValue === 'string') {
-          // If it's a string, parse it
-          const parsedDate = new Date(dateValue);
-          if (!isNaN(parsedDate.getTime())) {
-            dateValue = parsedDate.toISOString().split('T')[0];
+          // Parse DD-MM-YYYY or other formats
+          const parts = dateValue.split(/[-/]/);
+          if (parts.length === 3) {
+            // Assume DD-MM-YYYY format
+            const day = parts[0].padStart(2, '0');
+            const month = parts[1].padStart(2, '0');
+            const year = parts[2];
+            dateValue = `${year}-${month}-${day}`;
           } else {
             dateValue = new Date().toISOString().split('T')[0];
           }
         } else {
-          // Default to today
           dateValue = new Date().toISOString().split('T')[0];
         }
 
