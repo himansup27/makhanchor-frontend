@@ -433,12 +433,27 @@ const ProductionModal = ({ onClose, onSubmit }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    await onSubmit(formData);
-    setLoading(false);
-  };
+  const validatePacketInput = (value) => {
+  const num = parseFloat(value);
+  const decimal = Math.round((num - Math.floor(num)) * 100);
+  if (decimal > 15) {
+    alert('Dabba count cannot exceed 15. Please use format: packets.dabbas (e.g., 5.15 for 5 packets and 15 dabbas)');
+    return false;
+  }
+  return true;
+};
+
+// In ProductionModal handleSubmit, before calling onSubmit:
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (!validatePacketInput(formData.packets)) return;
+  if (formData.sold && !validatePacketInput(formData.sold)) return;
+  
+  setLoading(true);
+  await onSubmit(formData);
+  setLoading(false);
+};
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -526,12 +541,27 @@ const ProductionEditModal = ({ item, onClose, onSubmit }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    await onSubmit(formData);
-    setLoading(false);
-  };
+  const validatePacketInput = (value) => {
+  const num = parseFloat(value);
+  const decimal = Math.round((num - Math.floor(num)) * 100);
+  if (decimal > 15) {
+    alert('Dabba count cannot exceed 15. Please use format: packets.dabbas (e.g., 5.15 for 5 packets and 15 dabbas)');
+    return false;
+  }
+  return true;
+};
+
+// In ProductionModal handleSubmit, before calling onSubmit:
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (!validatePacketInput(formData.packets)) return;
+  if (formData.sold && !validatePacketInput(formData.sold)) return;
+  
+  setLoading(true);
+  await onSubmit(formData);
+  setLoading(false);
+};
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
