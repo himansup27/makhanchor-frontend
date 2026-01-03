@@ -18,7 +18,12 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    setTimeout(() => {
+      console.log('inside set authenticated');
+      
+    return null;
+      
+    }, 3000);
   }
 
   return children;

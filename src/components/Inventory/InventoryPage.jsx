@@ -79,11 +79,10 @@ const InventoryPage = ({ type, config }) => {
 
   // Filter data
   const filteredData = inventoryData.filter(item => {
-    const matchesSearch = item.quantity.toString().includes(searchTerm) || 
-                         (item.amount && item.amount.toString().includes(searchTerm));
-    const matchesFilter = filterType === 'all' || item.type === filterType;
-    return matchesSearch && matchesFilter;
-  });
+  const matchesSearch = item.quantity.toString().includes(searchTerm);
+  const matchesFilter = filterType === 'all' || item.type === filterType;
+  return matchesSearch && matchesFilter;
+});
 
   // Low stock alert
   const isLowStock = currentStock < config.lowStockThreshold;
@@ -110,12 +109,9 @@ const handleEdit = (item) => {
       for (const row of data) {
         let dateValue = row.date;
         
-        // Check if date is a number (Excel serial date)
         if (typeof dateValue === 'number') {
-          // Convert Excel serial date to JavaScript date
           const excelEpoch = new Date(Date.UTC(1899, 11, 30));
           const jsDate = new Date(excelEpoch.getTime() + dateValue * 86400000);
-          // Format as YYYY-MM-DD in local timezone
           const year = jsDate.getUTCFullYear();
           const month = String(jsDate.getUTCMonth() + 1).padStart(2, '0');
           const day = String(jsDate.getUTCDate()).padStart(2, '0');
@@ -126,10 +122,8 @@ const handleEdit = (item) => {
           const day = String(dateValue.getDate()).padStart(2, '0');
           dateValue = `${year}-${month}-${day}`;
         } else if (typeof dateValue === 'string') {
-          // Parse DD-MM-YYYY or other formats
           const parts = dateValue.split(/[-/]/);
           if (parts.length === 3) {
-            // Assume DD-MM-YYYY format
             const day = parts[0].padStart(2, '0');
             const month = parts[1].padStart(2, '0');
             const year = parts[2];
@@ -144,9 +138,8 @@ const handleEdit = (item) => {
         await inventoryAPI.create(type, {
           date: dateValue,
           type: row.type || 'import',
-          quantity: parseInt(row.quantity) || 0,
+          quantity: parseFloat(row.quantity) || 0,
           unit: config.unit,
-          amount: row.amount ? parseFloat(row.amount) : null,
         });
       }
 
@@ -355,91 +348,79 @@ const handleEdit = (item) => {
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Quantity
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                    No inventory data found
-                  </td>
-                </tr>
-              ) : (
-                filteredData.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <Calendar size={16} className="text-gray-400" />
-                        <span className="text-sm font-medium text-gray-900">
-                          {new Date(item.date).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {item.type === 'import' ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <TrendingUp size={12} />
-                          Import
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          <TrendingDown size={12} />
-                          Consumption
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-bold text-gray-900">{item.quantity}</span>
-                      <span className="text-xs text-gray-500 ml-1">{config.unit}</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {item.amount ? (
-                        <span className="text-sm font-semibold text-gray-900">
-                          ₹{item.amount.toLocaleString('en-IN')}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button 
-                        onClick={() => handleEdit(item)}
-                        className="text-blue-600 hover:text-blue-800 mr-3">
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+  <thead className="bg-gray-50 border-b border-gray-200">
+    <tr>
+      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        Date
+      </th>
+      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        Type
+      </th>
+      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        Quantity
+      </th>
+      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        Actions
+      </th>
+    </tr>
+  </thead>
+  <tbody className="divide-y divide-gray-200">
+    {filteredData.length === 0 ? (
+      <tr>
+        <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
+          No inventory data found
+        </td>
+      </tr>
+    ) : (
+      filteredData.map((item) => (
+        <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+          <td className="px-6 py-4 whitespace-nowrap">
+            <div className="flex items-center gap-2">
+              <Calendar size={16} className="text-gray-400" />
+              <span className="text-sm font-medium text-gray-900">
+                {new Date(item.date).toLocaleDateString('en-IN', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </span>
+            </div>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            {item.type === 'import' ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <TrendingUp size={12} />
+                Import
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                <TrendingDown size={12} />
+                Consumption
+              </span>
+            )}
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <span className="text-sm font-bold text-gray-900">{item.quantity}</span>
+            <span className="text-xs text-gray-500 ml-1">{config.unit}</span>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <button 
+              onClick={() => handleEdit(item)}
+              className="text-blue-600 hover:text-blue-800 mr-3">
+              <Edit size={16} />
+            </button>
+            <button
+              onClick={() => handleDelete(item.id)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <Trash2 size={16} />
+            </button>
+          </td>
+        </tr>
+      ))
+    )}
+  </tbody>
+</table>
         </div>
       </div>
 
@@ -520,7 +501,6 @@ const ImportModal = ({ config, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     quantity: '',
-    amount: '',
     type: 'import',
   });
   const [loading, setLoading] = useState(false);
@@ -560,51 +540,37 @@ const ImportModal = ({ config, onClose, onSubmit }) => {
               type="number"
               required
               min="0"
+              step="0.01"
               value={formData.quantity}
               onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder={`Enter number of ${config.unit}`}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Total Amount (₹)
-            </label>
-            <input
-              type="number"
-              required
-              min="0"
-              step="0.01"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Enter total amount"
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-primary-500 text-white py-2.5 rounded-lg hover:bg-primary-600 font-medium transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Adding...' : 'Add Import'}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+placeholder={`e.g., 10.5 (10 ${config.unit} + half)`}
+/>
+<p className="text-xs text-gray-500 mt-1">Use decimals: 10.5 = 10 {config.unit} + half</p>
+</div>
+<div className="flex gap-3 pt-4">
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex-1 bg-primary-500 text-white py-2.5 rounded-lg hover:bg-primary-600 font-medium transition-colors disabled:opacity-50"
+        >
+          {loading ? 'Adding...' : 'Add Import'}
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={loading}
+          className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+        >
+          Cancel
+        </button>
       </div>
-    </div>
-  );
+    </form>
+  </div>
+</div>
+);
 };
+
 
 // Consumption Modal
 const ConsumptionModal = ({ config, onClose, onSubmit }) => {
@@ -650,11 +616,13 @@ const ConsumptionModal = ({ config, onClose, onSubmit }) => {
               type="number"
               required
               min="0"
+              step="0.01"
               value={formData.quantity}
               onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder={`Enter ${config.unit} consumed`}
+              placeholder={`e.g., 2.5 (2 ${config.unit} + half)`}
             />
+            <p className="text-xs text-gray-500 mt-1">Use decimals: 2.5 = 2 {config.unit} + half</p>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -692,7 +660,6 @@ const InventoryEditModal = ({ item, config, onClose, onSubmit }) => {
     date: item.date.split('T')[0],
     type: item.type,
     quantity: item.quantity,
-    amount: item.amount || '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -744,27 +711,13 @@ const InventoryEditModal = ({ item, config, onClose, onSubmit }) => {
               type="number"
               required
               min="0"
+              step="0.01"
               value={formData.quantity}
               onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+            <p className="text-xs text-gray-500 mt-1">Use decimals for partial units</p>
           </div>
-
-          {formData.type === 'import' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Total Amount (₹)
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-            </div>
-          )}
 
           <div className="flex gap-3 pt-4">
             <button

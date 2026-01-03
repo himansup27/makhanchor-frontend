@@ -72,11 +72,10 @@ const ProductionPage = () => {
 
   // Filter data
   const filteredData = productionData.filter(item => {
-    const matchesSearch = item.packets.toString().includes(searchTerm) || 
-                         item.amount.toString().includes(searchTerm);
-    const matchesDate = filterDate ? item.date.split('T')[0] === filterDate : true;
-    return matchesSearch && matchesDate;
-  });
+  const matchesSearch = item.packets.toString().includes(searchTerm);
+  const matchesDate = filterDate ? item.date.split('T')[0] === filterDate : true;
+  return matchesSearch && matchesDate;
+});
 
   // Add edit handler function
 const handleEdit = (item) => {
@@ -100,12 +99,9 @@ const handleExcelUpload = async (e) => {
       for (const row of data) {
         let dateValue = row.date;
         
-        // Check if date is a number (Excel serial date)
         if (typeof dateValue === 'number') {
-          // Convert Excel serial date to JavaScript date
           const excelEpoch = new Date(Date.UTC(1899, 11, 30));
           const jsDate = new Date(excelEpoch.getTime() + dateValue * 86400000);
-          // Format as YYYY-MM-DD in local timezone
           const year = jsDate.getUTCFullYear();
           const month = String(jsDate.getUTCMonth() + 1).padStart(2, '0');
           const day = String(jsDate.getUTCDate()).padStart(2, '0');
@@ -116,10 +112,8 @@ const handleExcelUpload = async (e) => {
           const day = String(dateValue.getDate()).padStart(2, '0');
           dateValue = `${year}-${month}-${day}`;
         } else if (typeof dateValue === 'string') {
-          // Parse DD-MM-YYYY or other formats
           const parts = dateValue.split(/[-/]/);
           if (parts.length === 3) {
-            // Assume DD-MM-YYYY format
             const day = parts[0].padStart(2, '0');
             const month = parts[1].padStart(2, '0');
             const year = parts[2];
@@ -133,9 +127,8 @@ const handleExcelUpload = async (e) => {
 
         await productionAPI.create({
           date: dateValue,
-          packets: parseInt(row.packets) || 0,
-          amount: parseFloat(row.amount) || 0,
-          sold: parseInt(row.sold) || 0,
+          packets: parseFloat(row.packets) || 0,
+          sold: parseFloat(row.sold) || 0,
         });
       }
 
@@ -310,87 +303,79 @@ const handleExcelUpload = async (e) => {
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Packets Produced
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Total Amount
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Sold
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Remaining
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                    No production data found
-                  </td>
-                </tr>
-              ) : (
-                filteredData.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <Calendar size={16} className="text-gray-400" />
-                        <span className="text-sm font-medium text-gray-900">
-                          {new Date(item.date).toLocaleDateString('en-IN', { 
-                            day: '2-digit', 
-                            month: 'short', 
-                            year: 'numeric' 
-                          })}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-bold text-blue-600">{item.packets}</span>
-                      <span className="text-xs text-gray-500 ml-1">packets</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-semibold text-gray-900">
-                        ₹{item.amount.toLocaleString('en-IN')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {item.sold} sold
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                        {item.remaining} remaining
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button 
-                        onClick={() => handleEdit(item)}
-                        className="text-blue-600 hover:text-blue-800 mr-3">
-                        <Edit size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+  <thead className="bg-gray-50 border-b border-gray-200">
+    <tr>
+      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        Date
+      </th>
+      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        Packets Produced
+      </th>
+      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        Sold
+      </th>
+      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        Remaining
+      </th>
+      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        Actions
+      </th>
+    </tr>
+  </thead>
+  <tbody className="divide-y divide-gray-200">
+    {filteredData.length === 0 ? (
+      <tr>
+        <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+          No production data found
+        </td>
+      </tr>
+    ) : (
+      filteredData.map((item) => (
+        <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+          <td className="px-6 py-4 whitespace-nowrap">
+            <div className="flex items-center gap-2">
+              <Calendar size={16} className="text-gray-400" />
+              <span className="text-sm font-medium text-gray-900">
+                {new Date(item.date).toLocaleDateString('en-IN', { 
+                  day: '2-digit', 
+                  month: 'short', 
+                  year: 'numeric' 
+                })}
+              </span>
+            </div>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <span className="text-sm font-bold text-blue-600">{item.packets}</span>
+            <span className="text-xs text-gray-500 ml-1">packets</span>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              {item.sold} sold
+            </span>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+              {item.remaining} remaining
+            </span>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <button 
+              onClick={() => handleEdit(item)}
+              className="text-blue-600 hover:text-blue-800 mr-3">
+              <Edit size={16} />
+            </button>
+            <button 
+              onClick={() => handleDelete(item.id)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <Trash2 size={16} />
+            </button>
+          </td>
+        </tr>
+      ))
+    )}
+  </tbody>
+</table>
         </div>
       </div>
 
@@ -444,7 +429,6 @@ const ProductionModal = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     packets: '',
-    amount: '',
     sold: '0',
   });
   const [loading, setLoading] = useState(false);
@@ -486,27 +470,13 @@ const ProductionModal = ({ onClose, onSubmit }) => {
               type="number"
               required
               min="0"
+              step="0.01"
               value={formData.packets}
               onChange={(e) => setFormData({ ...formData, packets: e.target.value })}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Enter number of packets"
+              placeholder="e.g., 16.2 (16 packets + 2 dabba)"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Total Amount (₹)
-            </label>
-            <input
-              type="number"
-              required
-              min="0"
-              step="0.01"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Enter total amount"
-            />
+            <p className="text-xs text-gray-500 mt-1">Use decimals: 16.2 = 16 packets + 2 dabba</p>
           </div>
 
           <div>
@@ -516,6 +486,7 @@ const ProductionModal = ({ onClose, onSubmit }) => {
             <input
               type="number"
               min="0"
+              step="0.01"
               value={formData.sold}
               onChange={(e) => setFormData({ ...formData, sold: e.target.value })}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -551,7 +522,6 @@ const ProductionEditModal = ({ item, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     date: item.date.split('T')[0],
     packets: item.packets,
-    amount: item.amount,
     sold: item.sold,
   });
   const [loading, setLoading] = useState(false);
@@ -591,23 +561,12 @@ const ProductionEditModal = ({ item, onClose, onSubmit }) => {
               type="number"
               required
               min="0"
+              step="0.01"
               value={formData.packets}
               onChange={(e) => setFormData({ ...formData, packets: e.target.value })}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Total Amount (₹)</label>
-            <input
-              type="number"
-              required
-              min="0"
-              step="0.01"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
+            <p className="text-xs text-gray-500 mt-1">Use decimals: 16.2 = 16 packets + 2 dabba</p>
           </div>
 
           <div>
@@ -615,6 +574,7 @@ const ProductionEditModal = ({ item, onClose, onSubmit }) => {
             <input
               type="number"
               min="0"
+              step="0.01"
               value={formData.sold}
               onChange={(e) => setFormData({ ...formData, sold: e.target.value })}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"

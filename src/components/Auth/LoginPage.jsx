@@ -33,8 +33,10 @@ const LoginPage = () => {
 
     try {
       const result = await login(mobile, password);
+      console.log("calling login");
       
       if (result.success) {
+        console.log("calling login -----", result);
         navigate('/');
       } else {
         setError(result.message || 'Invalid mobile number or password');

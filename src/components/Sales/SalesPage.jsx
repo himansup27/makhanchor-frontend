@@ -73,12 +73,9 @@ const SalesPage = () => {
 
   // Calculate stats
   const totalSales = stats?.totalSales || 0;
-  const totalRevenue = stats?.totalRevenue || 0;
   const todaySales = salesData.find(s => s.date.split('T')[0] === new Date().toISOString().split('T')[0]);
-  const averageSale = salesData.length > 0 ? Math.round(totalRevenue / salesData.length) : 0;
 
   // Chart data (last 7 days)
-  // Chart data (last 7 days) - Group by date and sum values
 const chartData = Object.values(
   salesData.reduce((acc, s) => {
     const dateKey = new Date(s.date).toISOString().split('T')[0];
@@ -91,33 +88,29 @@ const chartData = Object.values(
       acc[dateKey] = {
         date: displayDate,
         packets: 0,
-        revenue: 0,
       };
     }
     
     acc[dateKey].packets += s.packets;
-    acc[dateKey].revenue += s.amount / 1000; // in thousands
     
     return acc;
   }, {})
 )
   .sort((a, b) => {
-    // Sort by date to maintain chronological order
     const dateA = new Date(a.date);
     const dateB = new Date(b.date);
     return dateA - dateB;
   })
-  .slice(-7); // Take last 7 days
+  .slice(-7);
 
   // Filter data
   const filteredData = salesData.filter(item => {
-    const matchesSearch = 
-      item.packets.toString().includes(searchTerm) ||
-      item.amount.toString().includes(searchTerm) ||
-      (item.customer && item.customer.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesDate = filterDate ? item.date.split('T')[0] === filterDate : true;
-    return matchesSearch && matchesDate;
-  });
+  const matchesSearch = 
+    item.packets.toString().includes(searchTerm) ||
+    (item.customer && item.customer.toLowerCase().includes(searchTerm.toLowerCase()));
+  const matchesDate = filterDate ? item.date.split('T')[0] === filterDate : true;
+  return matchesSearch && matchesDate;
+});
 
   const handleEdit = (item) => {
   setEditingItem(item);
@@ -176,77 +169,55 @@ const chartData = Object.values(
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard
-          title="Today's Sales"
-          value={todaySales?.packets || 0}
-          subtitle="packets sold"
-          icon={ShoppingCart}
-          trend="up"
-          trendValue="+12% from yesterday"
-          color="green"
-        />
-        <StatsCard
-          title="Today's Revenue"
-          value={`₹${((todaySales?.amount || 0) / 1000).toFixed(0)}K`}
-          subtitle="earnings today"
-          icon={DollarSign}
-          color="blue"
-        />
-        <StatsCard
-          title="Total Sales"
-          value={totalSales}
-          subtitle="all time packets"
-          icon={TrendingUp}
-          color="purple"
-        />
-        <StatsCard
-          title="Average Sale"
-          value={`₹${(averageSale / 1000).toFixed(0)}K`}
-          subtitle="per transaction"
-          icon={Users}
-          color="orange"
-        />
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <StatsCard
+    title="Today's Sales"
+    value={todaySales?.packets || 0}
+    subtitle="packets sold"
+    icon={ShoppingCart}
+    trend="up"
+    trendValue="+12% from yesterday"
+    color="green"
+  />
+  <StatsCard
+    title="Total Sales"
+    value={totalSales}
+    subtitle="all time packets"
+    icon={TrendingUp}
+    color="purple"
+  />
+  <StatsCard
+    title="Average Sale"
+    value={(salesData.length > 0 ? (totalSales / salesData.length).toFixed(1) : 0)}
+    subtitle="packets per transaction"
+    icon={Users}
+    color="orange"
+  />
+</div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Sales Trend */}
-        <div className="card p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Sales Trend (Last 7 Days)</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="packets"
-                stroke="#10b981"
-                strokeWidth={3}
-                name="Packets Sold"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Revenue Trend */}
-        <div className="card p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Revenue Trend (₹ in thousands)</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="revenue" fill="#3b82f6" name="Revenue (₹K)" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+<div className="grid grid-cols-1 gap-6">
+  {/* Sales Trend */}
+  <div className="card p-6">
+    <h3 className="text-lg font-bold text-gray-900 mb-4">Sales Trend (Last 7 Days)</h3>
+    <ResponsiveContainer width="100%" height={300}>
+      <LineChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+        <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 12 }} />
+        <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
+        <Tooltip />
+        <Legend />
+        <Line
+          type="monotone"
+          dataKey="packets"
+          stroke="#10b981"
+          strokeWidth={3}
+          name="Packets Sold"
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  </div>
+</div>
 
       {/* Filters */}
       <div className="card p-4">
@@ -287,84 +258,76 @@ const chartData = Object.values(
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Packets Sold
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                    No sales data found
-                  </td>
-                </tr>
-              ) : (
-                filteredData.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <Calendar size={16} className="text-gray-400" />
-                        <span className="text-sm font-medium text-gray-900">
-                          {new Date(item.date).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-semibold text-xs">
-                          {item.customer ? item.customer.charAt(0) : 'C'}
-                        </div>
-                        <span className="text-sm font-medium text-gray-900">
-                          {item.customer || 'Walk-in Customer'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-bold text-green-600">{item.packets}</span>
-                      <span className="text-xs text-gray-500 ml-1">packets</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-semibold text-gray-900">
-                        ₹{item.amount.toLocaleString('en-IN')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button 
-                        onClick={() => handleEdit(item)}
-                        className="text-blue-600 hover:text-blue-800 mr-3">
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+  <thead className="bg-gray-50 border-b border-gray-200">
+    <tr>
+      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        Date
+      </th>
+      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        Customer
+      </th>
+      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        Packets Sold
+      </th>
+      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        Actions
+      </th>
+    </tr>
+  </thead>
+  <tbody className="divide-y divide-gray-200">
+    {filteredData.length === 0 ? (
+      <tr>
+        <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
+          No sales data found
+        </td>
+      </tr>
+    ) : (
+      filteredData.map((item) => (
+        <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+          <td className="px-6 py-4 whitespace-nowrap">
+            <div className="flex items-center gap-2">
+              <Calendar size={16} className="text-gray-400" />
+              <span className="text-sm font-medium text-gray-900">
+                {new Date(item.date).toLocaleDateString('en-IN', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </span>
+            </div>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-semibold text-xs">
+                {item.customer ? item.customer.charAt(0) : 'C'}
+              </div>
+              <span className="text-sm font-medium text-gray-900">
+                {item.customer || 'Walk-in Customer'}
+              </span>
+            </div>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <span className="text-sm font-bold text-green-600">{item.packets}</span>
+            <span className="text-xs text-gray-500 ml-1">packets</span>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <button 
+              onClick={() => handleEdit(item)}
+              className="text-blue-600 hover:text-blue-800 mr-3">
+              <Edit size={16} />
+            </button>
+            <button
+              onClick={() => handleDelete(item.id)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <Trash2 size={16} />
+            </button>
+          </td>
+        </tr>
+      ))
+    )}
+  </tbody>
+</table>
         </div>
       </div>
 
@@ -418,7 +381,6 @@ const SalesModal = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     packets: '',
-    amount: '',
     customer: '',
   });
   const [loading, setLoading] = useState(false);
@@ -469,25 +431,13 @@ const SalesModal = ({ onClose, onSubmit }) => {
               type="number"
               required
               min="0"
+              step="0.01"
               value={formData.packets}
               onChange={(e) => setFormData({ ...formData, packets: e.target.value })}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Enter packets sold"
+              placeholder="e.g., 5.5 (5 packets + 5 dabba)"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Amount (₹)</label>
-            <input
-              type="number"
-              required
-              min="0"
-              step="0.01"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Enter sale amount"
-            />
+            <p className="text-xs text-gray-500 mt-1">Use decimals: 5.5 = 5 packets + 5 dabba</p>
           </div>
 
           <div className="flex gap-3 pt-4">
@@ -518,7 +468,6 @@ const SalesEditModal = ({ item, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     date: item.date.split('T')[0],
     packets: item.packets,
-    amount: item.amount,
     customer: item.customer || '',
   });
   const [loading, setLoading] = useState(false);
@@ -569,23 +518,12 @@ const SalesEditModal = ({ item, onClose, onSubmit }) => {
               type="number"
               required
               min="0"
+              step="0.01"
               value={formData.packets}
               onChange={(e) => setFormData({ ...formData, packets: e.target.value })}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Amount (₹)</label>
-            <input
-              type="number"
-              required
-              min="0"
-              step="0.01"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
+            <p className="text-xs text-gray-500 mt-1">Use decimals: 5.5 = 5 packets + 5 dabba</p>
           </div>
 
           <div className="flex gap-3 pt-4">

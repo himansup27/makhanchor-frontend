@@ -67,10 +67,8 @@ const DashboardOverview = () => {
 
   // Calculate metrics
   const totalProduction = productionStats?.totalProduction || 0;
-  const totalSales = salesStats?.totalSales || 0;
-  const totalRevenue = salesStats?.totalRevenue || 0;
-  const availableStock = productionStats?.totalRemaining || 0;
-  const profitMargin = totalRevenue > 0 ? ((totalRevenue - (productionStats?.totalAmount || 0)) / totalRevenue * 100).toFixed(1) : 0;
+const totalSales = salesStats?.totalSales || 0;
+const availableStock = productionStats?.totalRemaining || 0;
 
   // Get today's production
   const today = new Date().toISOString().split('T')[0];
@@ -78,60 +76,51 @@ const DashboardOverview = () => {
 
   // Prepare chart data - combine production and sales by date
   const daysToShow = chartPeriod === 'week' ? 7 : 30;
-  const chartDays = [...Array(daysToShow)].map((_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (daysToShow - 1 - i));
-    return date.toISOString().split('T')[0];
-  });
+const chartDays = [...Array(daysToShow)].map((_, i) => {
+  const date = new Date();
+  date.setDate(date.getDate() - (daysToShow - 1 - i));
+  return date.toISOString().split('T')[0];
+});
 
   const chartData = chartDays.map(date => {
-    // Sum all production entries for this date
-    const productionForDate = productionData
-      .filter(p => p.date.split('T')[0] === date)
-      .reduce((sum, p) => sum + (p.packets || 0), 0);
+  // Sum all production entries for this date
+  const productionForDate = productionData
+    .filter(p => p.date.split('T')[0] === date)
+    .reduce((sum, p) => sum + (p.packets || 0), 0);
   
-    // Sum all sales entries for this date
-    const salesForDate = salesData
-      .filter(s => s.date.split('T')[0] === date)
-      .reduce((sum, s) => sum + (s.packets || 0), 0);
+  // Sum all sales entries for this date
+  const salesForDate = salesData
+    .filter(s => s.date.split('T')[0] === date)
+    .reduce((sum, s) => sum + (s.packets || 0), 0);
   
-    // Sum all revenue for this date
-    const revenueForDate = salesData
-      .filter(s => s.date.split('T')[0] === date)
-      .reduce((sum, s) => sum + (s.amount || 0), 0);
-  
-    return {
-      date: new Date(date).toLocaleDateString('en-IN', { 
-        day: '2-digit', 
-        month: 'short' 
-      }),
-      production: productionForDate,
-      sales: salesForDate,
-      revenue: revenueForDate,
-    };
-  });
+  return {
+    date: new Date(date).toLocaleDateString('en-IN', { 
+      day: '2-digit', 
+      month: 'short' 
+    }),
+    production: productionForDate,
+    sales: salesForDate,
+  };
+});
 
   // Inventory distribution data
   const inventoryData = [
-    { 
-      name: 'Maida', 
-      value: inventoryStats?.maida?.currentStock || 0, 
-      color: '#f59e0b',
-      cost: inventoryStats?.maida?.totalCost || 0
-    },
-    { 
-      name: 'Oil', 
-      value: inventoryStats?.oil?.currentStock || 0, 
-      color: '#eab308',
-      cost: inventoryStats?.oil?.totalCost || 0
-    },
-    { 
-      name: 'Ghee', 
-      value: inventoryStats?.ghee?.currentStock || 0, 
-      color: '#f97316',
-      cost: inventoryStats?.ghee?.totalCost || 0
-    },
-  ];
+  { 
+    name: 'Maida', 
+    value: inventoryStats?.maida?.currentStock || 0, 
+    color: '#f59e0b',
+  },
+  { 
+    name: 'Oil', 
+    value: inventoryStats?.oil?.currentStock || 0, 
+    color: '#eab308',
+  },
+  { 
+    name: 'Ghee', 
+    value: inventoryStats?.ghee?.currentStock || 0, 
+    color: '#f97316',
+  },
+];
 
   // Recent activity
   const recentActivity = [
@@ -227,44 +216,35 @@ const DashboardOverview = () => {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard
-          title="Today's Production"
-          value={todayProduction?.packets || 0}
-          subtitle="packets produced"
-          icon={Package}
-          trend="up"
-          trendValue={`${productionStats?.avgDailyProduction?.toFixed(0) || 0} avg/day`}
-          color="blue"
-        />
-        <StatsCard
-          title="Available Stock"
-          value={availableStock}
-          subtitle="packets in inventory"
-          icon={TrendingUp}
-          trend={availableStock > 100 ? 'up' : 'down'}
-          trendValue={availableStock > 100 ? 'Healthy stock' : 'Low stock'}
-          color="green"
-        />
-        <StatsCard
-          title="Total Sales"
-          value={totalSales}
-          subtitle="packets sold"
-          icon={ShoppingCart}
-          trend="up"
-          trendValue={`${salesStats?.avgSalePackets?.toFixed(0) || 0} avg/sale`}
-          color="purple"
-        />
-        <StatsCard
-          title="Revenue"
-          value={`₹${(totalRevenue / 1000).toFixed(0)}K`}
-          subtitle="total earnings"
-          icon={DollarSign}
-          trend="up"
-          trendValue={`${profitMargin}% margin`}
-          color="orange"
-        />
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <StatsCard
+    title="Today's Production"
+    value={todayProduction?.packets || 0}
+    subtitle="packets produced"
+    icon={Package}
+    trend="up"
+    trendValue={`${productionStats?.avgDailyProduction?.toFixed(1) || 0} avg/day`}
+    color="blue"
+  />
+  <StatsCard
+    title="Available Stock"
+    value={availableStock}
+    subtitle="packets in inventory"
+    icon={TrendingUp}
+    trend={availableStock > 100 ? 'up' : 'down'}
+    trendValue={availableStock > 100 ? 'Healthy stock' : 'Low stock'}
+    color="green"
+  />
+  <StatsCard
+    title="Total Sales"
+    value={totalSales}
+    subtitle="packets sold"
+    icon={ShoppingCart}
+    trend="up"
+    trendValue={`${salesStats?.avgSalePackets?.toFixed(1) || 0} avg/sale`}
+    color="purple"
+  />
+</div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -378,24 +358,19 @@ const DashboardOverview = () => {
             </PieChart>
           </ResponsiveContainer>
           <div className="mt-4 space-y-3">
-            {inventoryData.map((item, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  ></div>
-                  <span className="text-sm font-medium text-gray-700">{item.name}</span>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold text-gray-900 text-sm">{item.value} units</div>
-                  <div className="text-xs text-gray-500">
-                    ₹{(item.cost / 1000).toFixed(0)}K
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+  {inventoryData.map((item, index) => (
+    <div key={index} className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <div
+          className="w-3 h-3 rounded-full"
+          style={{ backgroundColor: item.color }}
+        ></div>
+        <span className="text-sm font-medium text-gray-700">{item.name}</span>
+      </div>
+      <div className="font-bold text-gray-900 text-sm">{item.value} units</div>
+    </div>
+  ))}
+</div>
         </div>
       </div>
 
@@ -429,29 +404,25 @@ const DashboardOverview = () => {
 
         {/* Quick Stats */}
         <div className="card p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Stats</h3>
-          <div className="space-y-4">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <p className="text-sm text-blue-600 font-medium mb-1">Total Production</p>
-              <p className="text-2xl font-bold text-blue-900">{totalProduction}</p>
-              <p className="text-xs text-blue-600 mt-1">packets all time</p>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4">
-              <p className="text-sm text-green-600 font-medium mb-1">Total Revenue</p>
-              <p className="text-2xl font-bold text-green-900">
-                ₹{(totalRevenue / 1000).toFixed(0)}K
-              </p>
-              <p className="text-xs text-green-600 mt-1">all time earnings</p>
-            </div>
-            <div className="bg-amber-50 rounded-lg p-4">
-              <p className="text-sm text-amber-600 font-medium mb-1">Inventory Value</p>
-              <p className="text-2xl font-bold text-amber-900">
-                ₹{((inventoryStats?.maida?.totalCost || 0) + (inventoryStats?.oil?.totalCost || 0) + (inventoryStats?.ghee?.totalCost || 0)) / 1000}K
-              </p>
-              <p className="text-xs text-amber-600 mt-1">total stock value</p>
-            </div>
-          </div>
-        </div>
+  <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Stats</h3>
+  <div className="space-y-4">
+    <div className="bg-blue-50 rounded-lg p-4">
+      <p className="text-sm text-blue-600 font-medium mb-1">Total Production</p>
+      <p className="text-2xl font-bold text-blue-900">{totalProduction}</p>
+      <p className="text-xs text-blue-600 mt-1">packets all time</p>
+    </div>
+    <div className="bg-green-50 rounded-lg p-4">
+      <p className="text-sm text-green-600 font-medium mb-1">Total Sales</p>
+      <p className="text-2xl font-bold text-green-900">{totalSales}</p>
+      <p className="text-xs text-green-600 mt-1">packets all time</p>
+    </div>
+    <div className="bg-amber-50 rounded-lg p-4">
+      <p className="text-sm text-amber-600 font-medium mb-1">Available Stock</p>
+      <p className="text-2xl font-bold text-amber-900">{availableStock}</p>
+      <p className="text-xs text-amber-600 mt-1">packets remaining</p>
+    </div>
+  </div>
+</div>
       </div>
     </div>
   );

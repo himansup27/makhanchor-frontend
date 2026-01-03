@@ -49,8 +49,10 @@ export const AuthProvider = ({ children }) => {
   const login = async (mobile, password) => {
     try {
       const response = await authAPI.login(mobile, password);
+      console.log("inside login funtion auth context");
 
       if (response.success) {
+        console.log("inside saving auth user into local storage---", response);
         // Save token and user
         localStorage.setItem('authToken', response.token);
         localStorage.setItem('authUser', JSON.stringify(response.user));
