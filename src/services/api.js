@@ -194,4 +194,44 @@ export const salesAPI = {
   },
 };
 
+// ==================== RAW MATERIALS APIs ====================
+
+export const rawMaterialsAPI = {
+  // Get purchases by type with pagination and filters
+  getByType: async (type, params = {}) => {
+    const response = await api.get(`/raw-materials/${type}`, { params });
+    return response.data;
+  },
+
+  // Get statistics for a specific raw material type
+  getStats: async (type, params = {}) => {
+    const response = await api.get(`/raw-materials/${type}/stats`, { params });
+    return response.data;
+  },
+
+  // Create new purchase record
+  create: async (type, data) => {
+    const response = await api.post(`/raw-materials/${type}`, data);
+    return response.data;
+  },
+
+  // Update purchase record
+  update: async (id, data) => {
+    const response = await api.put(`/raw-materials/${id}`, data);
+    return response.data;
+  },
+
+  // Delete purchase record
+  delete: async (id) => {
+    const response = await api.delete(`/raw-materials/${id}`);
+    return response.data;
+  },
+
+  // Get all raw materials stats (for dashboard)
+  getAllStats: async () => {
+    const response = await api.get('/raw-materials/stats/all');
+    return response.data;
+  },
+};
+
 export default api;

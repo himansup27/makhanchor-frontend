@@ -15,6 +15,12 @@ import SalesPage from './components/Sales/SalesPage';
 import ReportsPage from './components/Reports/ReportsPage';
 import SettingsPage from './components/Settings/SettingsPage';
 
+// Import Raw Materials Pages
+import SujiPage from './components/RawMaterials/SujiPage';
+import SugarPage from './components/RawMaterials/SugarPage';
+import SaltPage from './components/RawMaterials/SaltPage';
+import GasPage from './components/RawMaterials/GasPage';
+
 // Dashboard Layout Component
 const DashboardLayout = ({ children }) => {
   return (
@@ -59,6 +65,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          
+          {/* Inventory Routes */}
           <Route
             path="/inventory/maida"
             element={
@@ -89,6 +97,49 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Raw Materials Routes */}
+          <Route
+            path="/raw-materials/suji"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <SujiPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/raw-materials/sugar"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <SugarPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/raw-materials/salt"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <SaltPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/raw-materials/gas"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <GasPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/sales"
             element={

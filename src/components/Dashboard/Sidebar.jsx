@@ -11,11 +11,17 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Flame,
+  Candy,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [inventoryOpen, setInventoryOpen] = useState(true);
+  const [rawMaterialsOpen, setRawMaterialsOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -36,9 +42,12 @@ const Sidebar = () => {
       color: 'text-purple-500',
       bgColor: 'bg-purple-50',
     },
+  ];
+
+  const inventoryItems = [
     {
       id: 'maida',
-      label: 'Maida Stock',
+      label: 'Maida',
       icon: Wheat,
       path: '/inventory/maida',
       color: 'text-amber-500',
@@ -46,7 +55,7 @@ const Sidebar = () => {
     },
     {
       id: 'oil',
-      label: 'Oil Stock',
+      label: 'Oil',
       icon: Droplet,
       path: '/inventory/oil',
       color: 'text-yellow-500',
@@ -54,12 +63,50 @@ const Sidebar = () => {
     },
     {
       id: 'ghee',
-      label: 'Ghee Stock',
+      label: 'Ghee',
       icon: Cookie,
       path: '/inventory/ghee',
       color: 'text-orange-500',
       bgColor: 'bg-orange-50',
     },
+  ];
+
+  const rawMaterialsItems = [
+    {
+      id: 'suji',
+      label: 'Suji',
+      icon: Wheat,
+      path: '/raw-materials/suji',
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-50',
+    },
+    {
+      id: 'sugar',
+      label: 'Sugar',
+      icon: Candy,
+      path: '/raw-materials/sugar',
+      color: 'text-pink-500',
+      bgColor: 'bg-pink-50',
+    },
+    {
+      id: 'salt',
+      label: 'Salt',
+      icon: Package,
+      path: '/raw-materials/salt',
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-50',
+    },
+    {
+      id: 'gas',
+      label: 'Gas',
+      icon: Flame,
+      path: '/raw-materials/gas',
+      color: 'text-red-500',
+      bgColor: 'bg-red-50',
+    },
+  ];
+
+  const bottomMenuItems = [
     {
       id: 'sales',
       label: 'Sales',
@@ -79,6 +126,8 @@ const Sidebar = () => {
   ];
 
   const isActive = (path) => location.pathname === path;
+  const isInventoryActive = inventoryItems.some(item => isActive(item.path));
+  const isRawMaterialsActive = rawMaterialsItems.some(item => isActive(item.path));
 
   return (
     <aside
@@ -101,8 +150,9 @@ const Sidebar = () => {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 px-3 pb-4">
+      <nav className="flex-1 px-3 pb-4 overflow-y-auto">
         <div className="space-y-1">
+          {/* Main Menu Items */}
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
@@ -117,7 +167,6 @@ const Sidebar = () => {
                     : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                {/* Active Indicator */}
                 {active && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-current rounded-r-full"></div>
                 )}
@@ -133,37 +182,201 @@ const Sidebar = () => {
                   </span>
                 )}
 
-                {/* Tooltip for collapsed state */}
                 {collapsed && (
-                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap">
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
                     {item.label}
                   </div>
                 )}
               </button>
             );
           })}
+
+          {/* Inventory Section */}
+          <div className="pt-2">
+            <button
+              onClick={() => !collapsed && setInventoryOpen(!inventoryOpen)}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative ${
+                isInventoryActive && !collapsed
+                  ? 'bg-gray-50 text-gray-900'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Package size={20} className="flex-shrink-0" />
+              
+              {!collapsed && (
+                <>
+                  <span className="font-medium text-sm flex-1 text-left">Inventory</span>
+                  {inventoryOpen ? (
+                    <ChevronUp size={16} className="text-gray-400" />
+                  ) : (
+                    <ChevronDown size={16} className="text-gray-400" />
+                  )}
+                </>
+              )}
+
+              {collapsed && (
+                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                  Inventory
+                </div>
+              )}
+            </button>
+
+            {/* Inventory Submenu */}
+            {!collapsed && inventoryOpen && (
+              <div className="ml-4 mt-1 space-y-1">
+                {inventoryItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.path);
+
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => navigate(item.path)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative ${
+                        active
+                          ? `${item.bgColor} ${item.color} shadow-sm`
+                          : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {active && (
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-current rounded-r-full"></div>
+                      )}
+
+                      <Icon size={18} className="flex-shrink-0" />
+                      <span className={`text-sm ${active ? 'font-semibold' : ''}`}>
+                        {item.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Raw Materials Section - NEW */}
+          <div className="pt-2">
+            <button
+              onClick={() => !collapsed && setRawMaterialsOpen(!rawMaterialsOpen)}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative ${
+                isRawMaterialsActive && !collapsed
+                  ? 'bg-gray-50 text-gray-900'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Package size={20} className="flex-shrink-0" />
+              
+              {!collapsed && (
+                <>
+                  <span className="font-medium text-sm flex-1 text-left">Raw Materials</span>
+                  {rawMaterialsOpen ? (
+                    <ChevronUp size={16} className="text-gray-400" />
+                  ) : (
+                    <ChevronDown size={16} className="text-gray-400" />
+                  )}
+                </>
+              )}
+
+              {collapsed && (
+                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                  Raw Materials
+                </div>
+              )}
+            </button>
+
+            {/* Raw Materials Submenu */}
+            {!collapsed && rawMaterialsOpen && (
+              <div className="ml-4 mt-1 space-y-1">
+                {rawMaterialsItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.path);
+
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => navigate(item.path)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative ${
+                        active
+                          ? `${item.bgColor} ${item.color} shadow-sm`
+                          : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {active && (
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-current rounded-r-full"></div>
+                      )}
+
+                      <Icon size={18} className="flex-shrink-0" />
+                      <span className={`text-sm ${active ? 'font-semibold' : ''}`}>
+                        {item.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Menu Items */}
+          <div className="pt-2 mt-2 border-t border-gray-200">
+            {bottomMenuItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(item.path)}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative ${
+                    active
+                      ? `${item.bgColor} ${item.color} shadow-sm`
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {active && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-current rounded-r-full"></div>
+                  )}
+
+                  <Icon
+                    size={20}
+                    className={`flex-shrink-0 ${active ? '' : 'group-hover:scale-110'} transition-transform`}
+                  />
+                  
+                  {!collapsed && (
+                    <span className={`font-medium text-sm ${active ? 'font-semibold' : ''}`}>
+                      {item.label}
+                    </span>
+                  )}
+
+                  {collapsed && (
+                    <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                      {item.label}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Settings at bottom */}
-        {!collapsed && <hr className="my-4 border-gray-200" />}
-        
-        <button
-          onClick={() => navigate('/settings')}
-          className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative ${
-            isActive('/settings')
-              ? 'bg-gray-100 text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          <Settings size={20} className="flex-shrink-0" />
-          {!collapsed && <span className="font-medium text-sm">Settings</span>}
-          
-          {collapsed && (
-            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap">
-              Settings
-            </div>
-          )}
-        </button>
+        <div className="pt-2 mt-2 border-t border-gray-200">
+          <button
+            onClick={() => navigate('/settings')}
+            className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative ${
+              isActive('/settings')
+                ? 'bg-gray-100 text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <Settings size={20} className="flex-shrink-0" />
+            {!collapsed && <span className="font-medium text-sm">Settings</span>}
+            
+            {collapsed && (
+              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                Settings
+              </div>
+            )}
+          </button>
+        </div>
       </nav>
 
       {/* Footer */}
