@@ -234,4 +234,44 @@ export const rawMaterialsAPI = {
   },
 };
 
+// ==================== MISCELLANEOUS APIs ====================
+
+export const miscellaneousAPI = {
+  // Get all spending records
+  getAll: async (params = {}) => {
+    const response = await api.get('/miscellaneous', { params });
+    return response.data;
+  },
+
+  // Get single spending record
+  getById: async (id) => {
+    const response = await api.get(`/miscellaneous/${id}`);
+    return response.data;
+  },
+
+  // Create spending record
+  create: async (data) => {
+    const response = await api.post('/miscellaneous', data);
+    return response.data;
+  },
+
+  // Update spending record
+  update: async (id, data) => {
+    const response = await api.put(`/miscellaneous/${id}`, data);
+    return response.data;
+  },
+
+  // Delete spending record
+  delete: async (id) => {
+    const response = await api.delete(`/miscellaneous/${id}`);
+    return response.data;
+  },
+
+  // Get statistics
+  getStats: async (params = {}) => {
+    const response = await api.get('/miscellaneous/stats', { params });
+    return response.data;
+  },
+};
+
 export default api;

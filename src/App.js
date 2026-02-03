@@ -21,6 +21,9 @@ import SugarPage from './components/RawMaterials/SugarPage';
 import SaltPage from './components/RawMaterials/SaltPage';
 import GasPage from './components/RawMaterials/GasPage';
 
+// Import Miscellaneous Page
+import MiscellaneousPage from './components/Miscellaneous/MiscellaneousPage';
+
 // Dashboard Layout Component
 const DashboardLayout = ({ children }) => {
   return (
@@ -135,6 +138,18 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <GasPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Miscellaneous Route - NEW */}
+          <Route
+            path="/miscellaneous"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <MiscellaneousPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

@@ -15,6 +15,7 @@ import {
   ChevronUp,
   Flame,
   Candy,
+  Receipt,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -107,6 +108,14 @@ const Sidebar = () => {
   ];
 
   const bottomMenuItems = [
+    {
+      id: 'miscellaneous',
+      label: 'Miscellaneous',
+      icon: Receipt,
+      path: '/miscellaneous',
+      color: 'text-purple-500',
+      bgColor: 'bg-purple-50',
+    },
     {
       id: 'sales',
       label: 'Sales',
@@ -221,7 +230,6 @@ const Sidebar = () => {
               )}
             </button>
 
-            {/* Inventory Submenu */}
             {!collapsed && inventoryOpen && (
               <div className="ml-4 mt-1 space-y-1">
                 {inventoryItems.map((item) => {
@@ -253,7 +261,7 @@ const Sidebar = () => {
             )}
           </div>
 
-          {/* Raw Materials Section - NEW */}
+          {/* Raw Materials Section */}
           <div className="pt-2">
             <button
               onClick={() => !collapsed && setRawMaterialsOpen(!rawMaterialsOpen)}
@@ -283,7 +291,6 @@ const Sidebar = () => {
               )}
             </button>
 
-            {/* Raw Materials Submenu */}
             {!collapsed && rawMaterialsOpen && (
               <div className="ml-4 mt-1 space-y-1">
                 {rawMaterialsItems.map((item) => {
