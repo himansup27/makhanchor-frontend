@@ -103,7 +103,7 @@ const RawMaterialsPage = ({ type, config }) => {
   // Handle Edit Purchase
   const handleEditPurchase = async (formData) => {
     try {
-      await rawMaterialsAPI.update(editingItem._id, formData);
+      await rawMaterialsAPI.update(editingItem.id, formData);
       alert('Purchase updated successfully!');
       setShowEditModal(false);
       setEditingItem(null);
@@ -442,7 +442,7 @@ const RawMaterialsPage = ({ type, config }) => {
                 </tr>
               ) : (
                 filteredData.map((item) => (
-                  <tr key={item._id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <Calendar size={16} className="text-gray-400" />
@@ -493,7 +493,7 @@ const RawMaterialsPage = ({ type, config }) => {
                           <Edit size={18} />
                         </button>
                         <button
-                          onClick={() => handleDelete(item._id)}
+                          onClick={() => handleDelete(item.id)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete"
                         >

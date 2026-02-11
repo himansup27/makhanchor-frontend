@@ -16,6 +16,8 @@ import {
 import StatsCard from '../Dashboard/StatsCard';
 import { productionAPI } from '../../services/api';
 import * as XLSX from 'xlsx';
+import { Pagination } from 'antd';
+import 'antd/dist/reset.css';
 
 const ProductionPage = () => {
   const [productionData, setProductionData] = useState([]);
@@ -26,19 +28,26 @@ const ProductionPage = () => {
   const [stats, setStats] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   // Load data from API on mount
   useEffect(() => {
     fetchProduction();
     fetchStats();
-  }, []);
+  }, [currentPage, pageSize]);
 
   const fetchProduction = async () => {
     try {
       setLoading(true);
-      const response = await productionAPI.getAll({ limit: 100 });
+      const response = await productionAPI.getAll({ 
+      page: currentPage,
+      limit: pageSize 
+    });
       if (response.success) {
         setProductionData(response.data);
+        setTotalRecords(response.pagination?.total || 0);
       }
     } catch (error) {
       console.error('Error fetching production:', error);
@@ -47,6 +56,15 @@ const ProductionPage = () => {
       setLoading(false);
     }
   };
+
+   // Pagination handlers
+const handlePageChange = (page, newPageSize) => {
+  setCurrentPage(page);
+  if (newPageSize !== pageSize) {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page when page size changes
+  }
+};
 
   const fetchStats = async () => {
     try {
@@ -378,6 +396,21 @@ const handleExcelUpload = async (e) => {
 </table>
         </div>
       </div>
+
+      {/* Ant Design Pagination */}
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-center">
+                <Pagination
+                  current={currentPage}
+                  pageSize={pageSize}
+                  total={totalRecords}
+                  onChange={handlePageChange}
+                  onShowSizeChange={handlePageChange}
+                  showSizeChanger
+                  showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} records`}
+                  pageSizeOptions={['10', '20', '50', '100']}
+                  showQuickJumper
+                />
+              </div>
 
       {/* Add Production Modal */}
       {showModal && (

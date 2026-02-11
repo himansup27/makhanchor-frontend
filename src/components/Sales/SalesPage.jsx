@@ -12,7 +12,11 @@ import {
   Edit,
   Trash2,
   Loader,
+  ChevronRight,
+  ChevronLeft,
 } from 'lucide-react';
+import { Pagination } from 'antd';
+import 'antd/dist/reset.css';
 import StatsCard from '../Dashboard/StatsCard';
 import { salesAPI } from '../../services/api';
 import * as XLSX from 'xlsx';
@@ -38,27 +42,34 @@ const SalesPage = () => {
   const [stats, setStats] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   // Load data from API
   useEffect(() => {
     fetchSales();
     fetchStats();
-  }, []);
+  }, [currentPage, pageSize]);
 
   const fetchSales = async () => {
-    try {
-      setLoading(true);
-      const response = await salesAPI.getAll({ limit: 100 });
-      if (response.success) {
-        setSalesData(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching sales:', error);
-      alert('Failed to load sales data');
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    const response = await salesAPI.getAll({ 
+      page: currentPage,
+      limit: pageSize 
+    });
+    if (response.success) {
+      setSalesData(response.data);
+      setTotalRecords(response.pagination?.total || 0);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching sales:', error);
+    alert('Failed to load sales data');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const fetchStats = async () => {
     try {
@@ -70,6 +81,15 @@ const SalesPage = () => {
       console.error('Error fetching stats:', error);
     }
   };
+
+  // Pagination handlers
+const handlePageChange = (page, newPageSize) => {
+  setCurrentPage(page);
+  if (newPageSize !== pageSize) {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page when page size changes
+  }
+};
 
   // Calculate stats
   const totalSales = stats?.totalSales || 0;
@@ -330,6 +350,21 @@ const chartData = Object.values(
 </table>
         </div>
       </div>
+
+      {/* Ant Design Pagination */}
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-center">
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={totalRecords}
+            onChange={handlePageChange}
+            onShowSizeChange={handlePageChange}
+            showSizeChanger
+            showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} records`}
+            pageSizeOptions={['10', '20', '50', '100']}
+            showQuickJumper
+          />
+        </div>
 
       {/* Add Sale Modal */}
       {showModal && (

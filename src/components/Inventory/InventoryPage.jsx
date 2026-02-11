@@ -18,6 +18,8 @@ import StatsCard from '../Dashboard/StatsCard';
 import AlertBanner from '../Dashboard/AlertBanner';
 import { inventoryAPI } from '../../services/api';
 import * as XLSX from 'xlsx';
+import { Pagination } from 'antd';
+import 'antd/dist/reset.css';
 
 const InventoryPage = ({ type, config }) => {
   const [inventoryData, setInventoryData] = useState([]);
@@ -29,27 +31,42 @@ const InventoryPage = ({ type, config }) => {
   const [stats, setStats] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   // Load data from API
   useEffect(() => {
     fetchInventory();
     fetchStats();
-  }, [type]);
+  }, [type, currentPage, pageSize]);
 
   const fetchInventory = async () => {
-    try {
-      setLoading(true);
-      const response = await inventoryAPI.getByCategory(type, { limit: 100 });
-      if (response.success) {
-        setInventoryData(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching inventory:', error);
-      alert('Failed to load inventory data');
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    const response = await inventoryAPI.getByCategory(type, { 
+      page: currentPage,
+      limit: pageSize 
+    });
+    if (response.success) {
+      setInventoryData(response.data);
+      setTotalRecords(response.pagination?.total || 0);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching inventory:', error);
+    alert('Failed to load inventory data');
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handlePageChange = (page, newPageSize) => {
+  setCurrentPage(page);
+  if (newPageSize !== pageSize) {
+    setPageSize(newPageSize);
+    setCurrentPage(1);
+  }
+};
 
   const fetchStats = async () => {
     try {
@@ -423,6 +440,21 @@ const handleEdit = (item) => {
 </table>
         </div>
       </div>
+
+      {/* Ant Design Pagination */}
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-center">
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={totalRecords}
+            onChange={handlePageChange}
+            onShowSizeChange={handlePageChange}
+            showSizeChanger
+            showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} records`}
+            pageSizeOptions={['10', '20', '50', '100']}
+            showQuickJumper
+          />
+        </div>
 
       {/* Modals */}
       {showImportModal && (
