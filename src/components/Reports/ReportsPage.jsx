@@ -4,14 +4,18 @@ import {
   TrendingUp,
   Calendar,
   Download,
-  FileText,
-  DollarSign,
   Package,
   ShoppingCart,
-  BarChart3,
-  PieChart as PieChartIcon,
+  Users,
   RefreshCw,
   Loader,
+  Droplet,
+  Cookie,
+  Wheat,
+  Flame,
+  Candy,
+  Receipt,
+  Box,
 } from 'lucide-react';
 import {
   LineChart,
@@ -30,8 +34,14 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { productionAPI, salesAPI, inventoryAPI } from '../../services/api';
+import { productionAPI, salesAPI, inventoryAPI, rawMaterialsAPI, miscellaneousAPI } from '../../services/api';
 import * as XLSX from 'xlsx';
+
+const toTotalDabbas = (packetValue) => {
+  const packets = Math.floor(packetValue);
+  const dabbas = Math.round((packetValue - packets) * 100);
+  return (packets * 16) + dabbas;
+};
 
 const ReportsPage = () => {
   const [dateRange, setDateRange] = useState('last7days');
@@ -40,7 +50,6 @@ const ReportsPage = () => {
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Load data on mount and when date range changes
   useEffect(() => {
     generateReport();
   }, [dateRange, startDate, endDate]);
@@ -49,31 +58,31 @@ const ReportsPage = () => {
     setLoading(true);
     
     try {
-      // Calculate date range
       const dates = getDateRange();
       const params = {
         startDate: dates.start,
         endDate: dates.end,
       };
 
-      // Fetch all data in parallel
-      const [prodStats, prodData, saleStats, saleData, invStats] = await Promise.all([
+      const [prodStats, prodData, saleStats, saleData, invStats, rawStats, miscStats] = await Promise.all([
         productionAPI.getStats(params),
-        productionAPI.getAll({ ...params, limit: 1000 }),
+        productionAPI.getAll({ ...params, limit: 10000 }),
         salesAPI.getStats(params),
-        salesAPI.getAll({ ...params, limit: 1000 }),
+        salesAPI.getAll({ ...params, limit: 10000 }),
         inventoryAPI.getAllStats(),
+        rawMaterialsAPI.getAllStats(),
+        miscellaneousAPI.getStats(params),
       ]);
 
-      // Process data
       const production = prodData.success ? prodData.data : [];
       const sales = saleData.success ? saleData.data : [];
 
-      // Calculate metrics
       const metrics = calculateMetrics(
         prodStats.success ? prodStats.data : {},
         saleStats.success ? saleStats.data : {},
         invStats.success ? invStats.data : {},
+        rawStats.success ? rawStats.data : {},
+        miscStats.success ? miscStats.data : {},
         production,
         sales
       );
@@ -93,36 +102,40 @@ const ReportsPage = () => {
 
     switch (dateRange) {
       case 'today':
-        start = new Date(now.setHours(0, 0, 0, 0));
-        end = new Date(now.setHours(23, 59, 59, 999));
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+        end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
         break;
       case 'last7days':
-        start = new Date(now.setDate(now.getDate() - 7));
+        start = new Date();
+        start.setDate(start.getDate() - 7);
         end = new Date();
         break;
       case 'last30days':
-        start = new Date(now.setDate(now.getDate() - 30));
+        start = new Date();
+        start.setDate(start.getDate() - 30);
         end = new Date();
         break;
       case 'thisMonth':
-        start = new Date(now.getFullYear(), now.getMonth(), 1);
-        end = new Date();
+        start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
         break;
       case 'lastMonth':
-        start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        end = new Date(now.getFullYear(), now.getMonth(), 0);
+        start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
+        end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
         break;
       case 'custom':
         if (startDate && endDate) {
-          start = new Date(startDate);
-          end = new Date(endDate);
+          start = new Date(startDate + 'T00:00:00');
+          end = new Date(endDate + 'T23:59:59');
         } else {
-          start = new Date(now.setDate(now.getDate() - 7));
+          start = new Date();
+          start.setDate(start.getDate() - 7);
           end = new Date();
         }
         break;
       default:
-        start = new Date(now.setDate(now.getDate() - 7));
+        start = new Date();
+        start.setDate(start.getDate() - 7);
         end = new Date();
     }
 
@@ -132,46 +145,41 @@ const ReportsPage = () => {
     };
   };
 
-  const calculateMetrics = (prodStats, saleStats, invStats, production, sales) => {
-    // Production metrics
+  const calculateMetrics = (prodStats, saleStats, invStats, rawStats, miscStats, production, sales) => {
     const totalProduction = prodStats.totalProduction || 0;
-    const totalProductionValue = prodStats.totalAmount || 0;
     const avgDailyProduction = prodStats.avgDailyProduction || 0;
-
-    // Sales metrics
     const totalSales = saleStats.totalSales || 0;
-    const totalRevenue = saleStats.totalRevenue || 0;
     const avgDailySales = saleStats.avgSalePackets || 0;
-    const avgOrderValue = saleStats.avgSaleAmount || 0;
 
-    // Inventory metrics
     const maidaStock = invStats?.maida?.currentStock || 0;
     const oilStock = invStats?.oil?.currentStock || 0;
     const gheeStock = invStats?.ghee?.currentStock || 0;
-    const totalInventoryCost = (invStats?.maida?.totalCost || 0) + 
-                               (invStats?.oil?.totalCost || 0) + 
-                               (invStats?.ghee?.totalCost || 0);
 
-    // Performance metrics
+    const sujiPurchased = rawStats?.suji?.totalPurchased || 0;
+    const sugarPurchased = rawStats?.sugar?.totalPurchased || 0;
+    const saltPurchased = rawStats?.salt?.totalPurchased || 0;
+    const gasBigTanks = rawStats?.gas?.totalBigTanks || 0;
+    const gasSmallTanks = rawStats?.gas?.totalSmallTanks || 0;
+
+    const totalSpending = miscStats?.rangeSpending || miscStats?.totalSpending || 0;
+
     const soldPercentage = totalProduction > 0 ? (totalSales / totalProduction) * 100 : 0;
-    const profitMargin = totalRevenue > 0 ? ((totalRevenue - totalProductionValue - totalInventoryCost) / totalRevenue) * 100 : 0;
 
     // Daily trends
     const dailyData = {};
     production.forEach(p => {
       const date = p.date.split('T')[0];
       if (!dailyData[date]) {
-        dailyData[date] = { date, production: 0, sales: 0, revenue: 0 };
+        dailyData[date] = { date, production: 0, sales: 0 };
       }
       dailyData[date].production += p.packets;
     });
     sales.forEach(s => {
       const date = s.date.split('T')[0];
       if (!dailyData[date]) {
-        dailyData[date] = { date, production: 0, sales: 0, revenue: 0 };
+        dailyData[date] = { date, production: 0, sales: 0 };
       }
       dailyData[date].sales += s.packets;
-      dailyData[date].revenue += s.amount;
     });
 
     const trendData = Object.values(dailyData)
@@ -180,61 +188,67 @@ const ReportsPage = () => {
         date: new Date(d.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
         production: d.production,
         sales: d.sales,
-        revenue: d.revenue / 1000,
       }));
 
     // Inventory distribution
     const inventoryDistribution = [
-      { name: 'Maida', value: maidaStock, cost: invStats?.maida?.totalCost || 0, color: '#f59e0b' },
-      { name: 'Oil', value: oilStock, cost: invStats?.oil?.totalCost || 0, color: '#eab308' },
-      { name: 'Ghee', value: gheeStock, cost: invStats?.ghee?.totalCost || 0, color: '#f97316' },
+      { name: 'Maida', value: maidaStock, color: '#f59e0b' },
+      { name: 'Oil', value: oilStock, color: '#eab308' },
+      { name: 'Ghee', value: gheeStock, color: '#f97316' },
     ];
 
-    // Top customers
+    // Top customers by packets sold
     const customerSales = {};
     sales.forEach(s => {
       const customer = s.customer || 'Walk-in';
       if (!customerSales[customer]) {
-        customerSales[customer] = { name: customer, packets: 0, revenue: 0 };
+        customerSales[customer] = { name: customer, packets: 0, dabbas: 0 };
       }
-      customerSales[customer].packets += s.packets;
-      customerSales[customer].revenue += s.amount;
+      const totalDabbas = toTotalDabbas(s.packets);
+      customerSales[customer].dabbas += totalDabbas;
+      customerSales[customer].packets = customerSales[customer].dabbas / 16;
     });
+    
     const topCustomers = Object.values(customerSales)
-      .sort((a, b) => b.revenue - a.revenue)
+      .sort((a, b) => b.dabbas - a.dabbas)
       .slice(0, 5);
 
+    // Raw materials summary
+    const rawMaterialsSummary = [
+      { name: 'Suji', value: sujiPurchased, unit: 'packets', color: '#eab308' },
+      { name: 'Sugar', value: sugarPurchased, unit: 'packets', color: '#ec4899' },
+      { name: 'Salt', value: saltPurchased, unit: 'packets', color: '#6b7280' },
+      { name: 'Gas (Big)', value: gasBigTanks, unit: 'tanks', color: '#ef4444' },
+      { name: 'Gas (Small)', value: gasSmallTanks, unit: 'tanks', color: '#f87171' },
+    ];
+
     return {
-      // Summary
       totalProduction,
       totalSales,
-      totalRevenue,
-      totalInventoryCost,
       soldPercentage,
-      profitMargin,
       avgDailyProduction,
       avgDailySales,
-      avgOrderValue,
-      
-      // Inventory
       maidaStock,
       oilStock,
       gheeStock,
       inventoryDistribution,
-      
-      // Charts
       trendData,
       topCustomers,
+      rawMaterialsSummary,
+      sujiPurchased,
+      sugarPurchased,
+      saltPurchased,
+      gasBigTanks,
+      gasSmallTanks,
+      totalSpending,
     };
   };
 
-  // Export comprehensive report
   const exportReport = () => {
     if (!reportData) return;
 
     const wb = XLSX.utils.book_new();
 
-    // Summary sheet
     const summaryData = [
       ['MakhanChor Biscuits - Comprehensive Report'],
       ['Generated on:', new Date().toLocaleString('en-IN')],
@@ -242,33 +256,35 @@ const ReportsPage = () => {
       [],
       ['PRODUCTION SUMMARY'],
       ['Total Production:', reportData.totalProduction, 'packets'],
-      ['Average Daily Production:', reportData.avgDailyProduction.toFixed(2), 'packets'],
+      ['Average Daily Production:', reportData.avgDailyProduction, 'packets'],
       [],
       ['SALES SUMMARY'],
       ['Total Sales:', reportData.totalSales, 'packets'],
-      ['Total Revenue:', '₹' + reportData.totalRevenue.toLocaleString('en-IN')],
-      ['Average Daily Sales:', reportData.avgDailySales.toFixed(2), 'packets'],
-      ['Average Order Value:', '₹' + reportData.avgOrderValue.toLocaleString('en-IN')],
+      ['Average Daily Sales:', reportData.avgDailySales, 'packets'],
+      ['Sold Percentage:', reportData.soldPercentage.toFixed(2) + '%'],
       [],
       ['INVENTORY SUMMARY'],
       ['Maida Stock:', reportData.maidaStock, 'packets'],
       ['Oil Stock:', reportData.oilStock, 'tins'],
       ['Ghee Stock:', reportData.gheeStock, 'dabba'],
-      ['Total Inventory Cost:', '₹' + reportData.totalInventoryCost.toLocaleString('en-IN')],
       [],
-      ['PERFORMANCE METRICS'],
-      ['Sold Percentage:', reportData.soldPercentage.toFixed(2) + '%'],
-      ['Profit Margin:', reportData.profitMargin.toFixed(2) + '%'],
+      ['RAW MATERIALS'],
+      ['Suji Purchased:', reportData.sujiPurchased, 'packets'],
+      ['Sugar Purchased:', reportData.sugarPurchased, 'packets'],
+      ['Salt Purchased:', reportData.saltPurchased, 'packets'],
+      ['Gas Big Tanks:', reportData.gasBigTanks],
+      ['Gas Small Tanks:', reportData.gasSmallTanks],
+      [],
+      ['MISCELLANEOUS'],
+      ['Total Spending:', `₹${reportData.totalSpending.toLocaleString('en-IN')}`],
     ];
 
     const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
     XLSX.utils.book_append_sheet(wb, ws1, 'Summary');
 
-    // Trend data sheet
     const ws2 = XLSX.utils.json_to_sheet(reportData.trendData);
     XLSX.utils.book_append_sheet(wb, ws2, 'Daily Trends');
 
-    // Top customers sheet
     if (reportData.topCustomers.length > 0) {
       const ws3 = XLSX.utils.json_to_sheet(reportData.topCustomers);
       XLSX.utils.book_append_sheet(wb, ws3, 'Top Customers');
@@ -298,31 +314,23 @@ const ReportsPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Reports & Analytics</h2>
           <p className="text-sm text-gray-600 mt-1">Comprehensive business insights and trends</p>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={generateReport}
-            className="btn-secondary flex items-center gap-2"
-          >
+          <button onClick={generateReport} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={18} />
             Refresh
           </button>
-          <button
-            onClick={exportReport}
-            className="btn-primary flex items-center gap-2"
-          >
+          <button onClick={exportReport} className="btn-primary flex items-center gap-2">
             <Download size={18} />
             Export Report
           </button>
         </div>
       </div>
 
-      {/* Date Range Selector */}
       <div className="card p-4">
         <div className="flex flex-wrap gap-3 items-center">
           <Calendar className="text-gray-400" size={20} />
@@ -371,7 +379,6 @@ const ReportsPage = () => {
         </div>
       </div>
 
-      {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="card p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <div className="flex items-center justify-between mb-3">
@@ -383,7 +390,7 @@ const ReportsPage = () => {
           <h3 className="text-3xl font-bold text-blue-900">{reportData.totalProduction}</h3>
           <p className="text-sm text-blue-600 mt-1">Total packets produced</p>
           <p className="text-xs text-blue-500 mt-2">
-            Avg: {reportData.avgDailyProduction.toFixed(1)} packets/day
+            Avg: {reportData.avgDailyProduction} packets/day
           </p>
         </div>
 
@@ -403,17 +410,17 @@ const ReportsPage = () => {
 
         <div className="card p-6 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
           <div className="flex items-center justify-between mb-3">
-            <DollarSign className="text-purple-600" size={32} />
+            <Receipt className="text-purple-600" size={32} />
             <span className="text-xs font-medium bg-purple-200 text-purple-800 px-2 py-1 rounded-full">
-              Revenue
+              Spending
             </span>
           </div>
           <h3 className="text-3xl font-bold text-purple-900">
-            ₹{(reportData.totalRevenue / 1000).toFixed(0)}K
+            ₹{(reportData.totalSpending / 1000).toFixed(0)}K
           </h3>
-          <p className="text-sm text-purple-600 mt-1">Total revenue</p>
+          <p className="text-sm text-purple-600 mt-1">Miscellaneous</p>
           <p className="text-xs text-purple-500 mt-2">
-            Avg order: ₹{reportData.avgOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+            During period
           </p>
         </div>
 
@@ -421,22 +428,20 @@ const ReportsPage = () => {
           <div className="flex items-center justify-between mb-3">
             <TrendingUp className="text-orange-600" size={32} />
             <span className="text-xs font-medium bg-orange-200 text-orange-800 px-2 py-1 rounded-full">
-              Profit Margin
+              Avg Daily
             </span>
           </div>
           <h3 className="text-3xl font-bold text-orange-900">
-            {reportData.profitMargin.toFixed(1)}%
+            {reportData.avgDailySales}
           </h3>
-          <p className="text-sm text-orange-600 mt-1">Estimated margin</p>
+          <p className="text-sm text-orange-600 mt-1">Packets sold per day</p>
           <p className="text-xs text-orange-500 mt-2">
-            After inventory costs
+            Sales average
           </p>
         </div>
       </div>
 
-      {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Production & Sales Trend */}
         <div className="card p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Production vs Sales Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -454,13 +459,7 @@ const ReportsPage = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 12 }} />
               <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                }}
-              />
+              <Tooltip />
               <Legend />
               <Area
                 type="monotone"
@@ -484,46 +483,16 @@ const ReportsPage = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* Revenue Trend */}
         <div className="card p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Revenue Trend (₹ in thousands)</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Current Inventory Stock</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={reportData.trendData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                }}
-              />
-              <Legend />
-              <Bar
-                dataKey="revenue"
-                fill="#8b5cf6"
-                radius={[8, 8, 0, 0]}
-                name="Revenue (₹K)"
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Inventory Distribution */}
-        <div className="card p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Inventory Distribution</h3>
-          <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
                 data={reportData.inventoryDistribution}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={({ name, value }) => `${name}: ${value}`}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
@@ -535,10 +504,19 @@ const ReportsPage = () => {
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
-          <div className="mt-4 space-y-2">
-            {reportData.inventoryDistribution.map((item, index) => (
-              <div key={index} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="card p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Box size={20} className="text-orange-500" />
+            Raw Materials Purchased
+          </h3>
+          <div className="space-y-4">
+            {reportData.rawMaterialsSummary.map((item, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: item.color }}
@@ -546,19 +524,19 @@ const ReportsPage = () => {
                   <span className="font-medium text-gray-700">{item.name}</span>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-gray-900">{item.value} units</div>
-                  <div className="text-xs text-gray-500">
-                    ₹{item.cost.toLocaleString('en-IN')}
-                  </div>
+                  <div className="font-bold text-gray-900">{item.value}</div>
+                  <div className="text-xs text-gray-500">{item.unit}</div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Top Customers */}
-        <div className="lg:col-span-2 card p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Top 5 Customers</h3>
+        <div className="card p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Users size={20} className="text-green-500" />
+            Top 5 Customers
+          </h3>
           {reportData.topCustomers.length === 0 ? (
             <p className="text-center text-gray-500 py-8">No customer data available</p>
           ) : (
@@ -572,7 +550,7 @@ const ReportsPage = () => {
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-semibold text-gray-900">{customer.name}</span>
                       <span className="text-sm font-bold text-green-600">
-                        ₹{customer.revenue.toLocaleString('en-IN')}
+                        {customer.packets.toFixed(2)} packets
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -580,11 +558,11 @@ const ReportsPage = () => {
                         <div
                           className="bg-gradient-to-r from-green-400 to-green-600 h-full rounded-full transition-all duration-500"
                           style={{
-                            width: `${(customer.revenue / reportData.topCustomers[0].revenue) * 100}%`,
+                            width: `${(customer.dabbas / reportData.topCustomers[0].dabbas) * 100}%`,
                           }}
                         ></div>
                       </div>
-                      <span className="text-xs text-gray-500">{customer.packets} packets</span>
+                      <span className="text-xs text-gray-500">{customer.dabbas} dabbas</span>
                     </div>
                   </div>
                 </div>
@@ -594,11 +572,9 @@ const ReportsPage = () => {
         </div>
       </div>
 
-      {/* Detailed Metrics Table */}
       <div className="card p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">Detailed Metrics</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Production Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <Package size={18} className="text-blue-500" />
@@ -611,7 +587,7 @@ const ReportsPage = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Avg Daily:</span>
-                <span className="font-semibold">{reportData.avgDailyProduction.toFixed(2)} packets</span>
+                <span className="font-semibold">{reportData.avgDailyProduction} packets</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Sold Percentage:</span>
@@ -620,7 +596,6 @@ const ReportsPage = () => {
             </div>
           </div>
 
-          {/* Sales Metrics */}
           <div>
             <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <ShoppingCart size={18} className="text-green-500" />
@@ -632,20 +607,21 @@ const ReportsPage = () => {
                 <span className="font-semibold">{reportData.totalSales} packets</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Total Revenue:</span>
-                <span className="font-semibold">₹{reportData.totalRevenue.toLocaleString('en-IN')}</span>
+                <span className="text-gray-600">Avg Daily Sales:</span>
+                <span className="font-semibold">{reportData.avgDailySales} packets</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Avg Order Value:</span>
-                <span className="font-semibold">₹{reportData.avgOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+                <span className="text-gray-600">Top Customer:</span>
+                <span className="font-semibold">
+                  {reportData.topCustomers[0]?.name || 'N/A'}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Inventory Metrics */}
           <div>
             <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <BarChart3 size={18} className="text-orange-500" />
+              <Droplet size={18} className="text-orange-500" />
               Inventory Metrics
             </h4>
             <div className="space-y-2 text-sm">
